@@ -2,10 +2,12 @@
 // PATCH /api/admin/shipments/[id]/vendor-tracking
 // Replaces prototype saveVendorTrackingMap()
 // Maps raw carrier barcode to shipment, advances status
+// Registers with TrackingMore/EasyPost for automatic updates
 // =============================================================
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabase } from '@/lib/supabase';
 import { VendorTrackingSchema } from '@/lib/schemas';
+import { registerShipmentWithCarrier } from '@/lib/carrier-registration';
 
 export async function PATCH(
   req: NextRequest,
@@ -61,8 +63,27 @@ export async function PATCH(
     raw_carrier_status: null,
   });
 
-  // 4. TODO: Register with external tracking service (TrackingMore/EasyPost)
-  // await registerWithTrackingService({ carrier_name, vendor_tracking_id });
+  // 4. Register with external tracking service (TrackingMore/EasyPost)
+  const preferredProvider = (process.env.TRACKING_PROVIDER as 'trackingmore' | 'easypost') ?? 'trackingmore';
+  const registration = await registerShipmentWithCarrier(
+    vendor_tracking_id,
+    carrier_name,
+    preferredProvider
+  );
 
-  return NextResponse.json({ shipment: updated });
+  if (!registration.success) {
+    console.warn('Failed to register with carrier:', registration.error);
+    // Don't fail the request - tracking will still work via webhooks
+    // But include warning in response for ops team
+    return NextResponse.json({
+      shipment: updated,
+      tracking_registration: registration,
+      warning: 'Không thể đăng ký theo dõi với nhà cung cấp. Vui lòng kiểm tra cấu hình API.',
+    });
+  }
+
+  return NextResponse.json({
+    shipment: updated,
+    tracking_registration: registration,
+  });
 }
