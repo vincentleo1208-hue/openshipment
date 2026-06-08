@@ -1,0 +1,1 @@
+Nothing should be ignored in this case. The added file 'README.md' is a source/config file and does not need to be in .gitignore.
