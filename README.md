@@ -185,6 +185,11 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
 # Webhook Security
 CARRIER_WEBHOOK_SECRET=your_hmac_secret_for_carrier_webhooks
+
+# Carrier Integration (TrackingMore or EasyPost)
+TRACKING_PROVIDER=trackingmore  # or 'easypost'
+TRACKINGMORE_API_KEY=your_trackingmore_api_key
+EASYPOST_API_KEY=your_easypost_api_key
 ```
 
 ## 🗄️ Database Schema
